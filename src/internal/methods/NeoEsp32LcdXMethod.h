@@ -30,7 +30,7 @@ License along with NeoPixel.  If not, see
 
 extern "C"
 {
-#include <driver/periph_ctrl.h>
+#include "esp_private/periph_ctrl.h"
 #include <esp_private/gdma.h>
 #include <esp_rom_gpio.h>
 //#include <esp_rom_lldesc.h>
@@ -439,7 +439,7 @@ public:
                 .sibling_chan = NULL,
                 .direction = GDMA_CHANNEL_DIRECTION_TX,
                 .flags = {.reserve_sibling = 0}};
-            gdma_new_channel(&dma_chan_config, &_dmaChannel);
+            gdma_new_ahb_channel(&dma_chan_config, &_dmaChannel);
             gdma_connect(_dmaChannel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_LCD, 0));
             gdma_strategy_config_t strategy_config = {.owner_check = false,
                                                         .auto_update_desc = false};
@@ -552,7 +552,8 @@ public:
         
         uint8_t muxIdx = LCD_DATA_OUT0_IDX + _muxId;
         esp_rom_gpio_connect_out_signal(pin, muxIdx, invert, false);
-        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[pin], PIN_FUNC_GPIO);
+        gpio_set_direction((gpio_num_t)pin, GPIO_MODE_OUTPUT);
+            gpio_set_pull_mode((gpio_num_t)pin, GPIO_FLOATING);
         gpio_set_drive_capability((gpio_num_t)pin, (gpio_drive_cap_t)3);
         return true;
     }
